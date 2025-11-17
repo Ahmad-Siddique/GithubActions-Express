@@ -1,0 +1,63 @@
+name: Deployment
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+
+# -----------------------
+# GLOBAL ENV VARIABLES
+# -----------------------
+env:
+  MONGODB_CLUSTER_ADDRESS: ${{ secrets.CLUSTERADDRESS }}
+  MONGODB_DB_NAME: ${{ secrets.DBNAME }}
+
+jobs:
+  test:
+    environment: testing
+    runs-on: ubuntu-latest
+
+    # -----------------------
+    # JOB-SPECIFIC VARIABLES
+    # -----------------------
+    env:
+      MONGODB_USERNAME: ${{ secrets.DBUSER }}
+      MONGODB_PASSWORD: ${{ secrets.DBPASSWORD }}
+
+    steps:
+      - name: Get Code
+        uses: actions/checkout@v3
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: npm-deps-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run server
+        run: npm start & npx wait-on http://127.0.0.1:XYZ
+
+      - name: Run tests
+        run: npm test
+
+      - name: Output env information (safe)
+        run: |
+          echo "Cluster Address: $MONGODB_CLUSTER_ADDRESS"
+          echo "Database Name: $MONGODB_DB_NAME"
+          echo "Username Loaded: $([[ -n \"$MONGODB_USERNAME\" ]] && echo YES || echo NO)"
+          echo "Password Loaded: $([[ -n \"$MONGODB_PASSWORD\" ]] && echo YES || echo NO)"
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Output deployment info
+        run: |
+          echo "Deployment Job Running"
+          echo "Cluster Address: $MONGODB_CLUSTER_ADDRESS"
+          echo "Database Name: $MONGODB_DB_NAME"
