@@ -12,6 +12,7 @@ on:
 env:
   MONGODB_CLUSTER_ADDRESS: ${{ secrets.CLUSTERADDRESS }}
   MONGODB_DB_NAME: ${{ secrets.DBNAME }}
+  PORT: ${{ secrets.PORT }}
 
 jobs:
   test:
@@ -39,7 +40,7 @@ jobs:
         run: npm ci
 
       - name: Run server
-        run: npm start & npx wait-on http://127.0.0.1:XYZ
+        run: npm start & npx wait-on http://127.0.0.1:$PORT
 
       - name: Run tests
         run: npm test
@@ -48,6 +49,7 @@ jobs:
         run: |
           echo "Cluster Address: $MONGODB_CLUSTER_ADDRESS"
           echo "Database Name: $MONGODB_DB_NAME"
+          echo "App Port: $PORT"
           echo "Username Loaded: $([[ -n \"$MONGODB_USERNAME\" ]] && echo YES || echo NO)"
           echo "Password Loaded: $([[ -n \"$MONGODB_PASSWORD\" ]] && echo YES || echo NO)"
 
@@ -61,3 +63,4 @@ jobs:
           echo "Deployment Job Running"
           echo "Cluster Address: $MONGODB_CLUSTER_ADDRESS"
           echo "Database Name: $MONGODB_DB_NAME"
+          echo "Port: $PORT"
